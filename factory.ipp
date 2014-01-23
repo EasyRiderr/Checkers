@@ -1,4 +1,3 @@
-
 /*
 * factory.ipp
 * The factory allowing to quick create objects.

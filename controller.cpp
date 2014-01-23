@@ -13,12 +13,25 @@
 #include "controller.h"
 #include "factory.h"
 #include "draughtpiece.h"
+#include "clickablelabel.h"
 
 
-Controller::Controller() :
-    next_(WHITE)
+Controller::Controller(QWidget * parent) :
+    QMainWindow(parent),
+    next_(WHITE),
+    squareSelected_((position_t){-1,-1})
 {
     initDraughtboard();
+
+    ClickableLabel ** labelTable = db_.getLabelTable();
+    for(int i = 0 ; i < DB_LENGTH * DB_LENGTH ; ++i) {
+        connect(labelTable[i], SIGNAL(clicked(position_t)), this, SLOT(getClicked(position_t)));
+    }
+    // Set the properties of the window
+    setWindowTitle("Checkers");
+    setMinimumSize(600, 600);
+
+    setCentralWidget(db_.draw());
 }
 
 
@@ -56,27 +69,7 @@ void Controller::initDraughtboard() {
 }
 
 
-void Controller::verifyPositions(const position_t & inSrc, const position_t & inDst) const throw(SquareEmpty, std::out_of_range, WrongPlayer, SquareNotEmpty) {
-    // Verify that the source position contains a Piece
-    if(db_.isFree(inSrc)) {
-        std::string tmp = "You must select a " + (std::string)((next_ == WHITE)? "white" : "black") + " piece to move.";
-        throw SquareEmpty(tmp.c_str());
-    }
-
-    // Verify that the source position contains a Piece which can move this turn
-    if(db_.getPiece(inSrc)->getColor() != next_) {
-        std::string tmp = "It is not your turn to play, you must move a " + (std::string)((next_ == WHITE)? "white" : "black") + " piece.";
-        throw WrongPlayer(tmp.c_str());
-    }
-
-    if(!db_.isFree(inDst)) {
-        throw SquareNotEmpty("The destination square must be unoccuped.");
-    }
-}
-
-
 void Controller::move(const position_t & inSrc, const position_t & inDst) throw(SquareNotEmpty, SquareEmpty, std::out_of_range, WrongPlayer, NotReachableSquare, IllegalMove) {
-    verifyPositions(inSrc, inDst);
     bool throwError = false;
     position_t pieceToEat;
 
@@ -160,9 +153,9 @@ bool Controller::pieceCanReachPosition(const Piece & inPiece, const position_t &
 }
 
 
-void Controller::display() const {
-    std::cout << *db_.draw() << std::endl;
-}
+/*void Controller::display() {
+    setCentralWidget(db_.draw());
+}*/
 
 
 bool Controller::isEnd() const {
@@ -177,4 +170,73 @@ int Controller::getBlackPiecesNumber() const {
 
 int Controller::getWhitePiecesNumber() const {
     return whitePieces_.size();
+}
+
+
+void Controller::getClicked(position_t pos){
+    try {
+        treatGUIEvent(pos);
+    } catch(const SquareEmpty & sqee) {
+        QMessageBox::about(this, "Error", sqee.what());
+        squareSelected_ = (position_t){-1, -1};
+    } catch(const WrongPlayer & wpe) {
+        QMessageBox::about(this, "Error", wpe.what());
+        squareSelected_ = (position_t){-1, -1};
+    } catch(const SquareNotEmpty & sqnee){
+        QMessageBox::about(this, "Error", sqnee.what());
+        squareSelected_ = (position_t){-1, -1};
+    }
+    if(isEnd()) {
+        if(getBlackPiecesNumber() == 0) {
+            QMessageBox::about(this, "Congratulations", "White player win the game !");
+        } else {
+            QMessageBox::about(this, "Congratulations", "Black player win the game !");
+        }
+        // Close the window
+        close();
+    }
+}
+
+
+void Controller::treatGUIEvent(position_t pos) throw(SquareEmpty, WrongPlayer, SquareNotEmpty) {
+    if(isPieceSelected()) {
+        if(!db_.isFree(pos)) {
+            throw SquareNotEmpty("The destination square must be unoccuped.");
+        }
+        // Do the move
+        try {
+            move(squareSelected_, pos);
+        } catch(const NotReachableSquare & nrsqe) {
+            QMessageBox::about(this, "Error", nrsqe.what());
+            squareSelected_ = (position_t) {-1, -1};
+        } catch(const IllegalMove & ime) {
+            QMessageBox::about(this, "Error", ime.what());
+            squareSelected_ = (position_t) {-1, -1};
+        }
+
+        // Unselect square
+        squareSelected_ = (position_t){-1, -1};
+    } else {
+        // Verify that the source position contains a Piece
+        if(db_.isFree(pos)) {
+            std::string tmp = "You must select a " + (std::string)((next_ == WHITE)? "white" : "black") + " piece to move.";
+            throw SquareEmpty(tmp.c_str());
+        }
+
+        // Verify that the source position contains a Piece which can move this turn
+        if(db_.getPiece(pos)->getColor() != next_) {
+            std::string tmp = "It is not your turn to play, you must move a " + (std::string)((next_ == WHITE)? "white" : "black") + " piece.";
+            throw WrongPlayer(tmp.c_str());
+        }
+
+        squareSelected_ = pos;
+    }
+
+    // Update GUI
+    setCentralWidget(db_.draw());
+}
+
+
+bool Controller::isPieceSelected() const {
+    return squareSelected_.i != - 1 && squareSelected_.j != -1;
 }

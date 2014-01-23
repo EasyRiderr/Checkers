@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include "draughtBoard.h"
+#include "draughtpiece.h"
 
 
 void DraughtBoard::init() {
@@ -36,6 +37,28 @@ DraughtBoard::DraughtBoard() {
         std::cerr << "Memory allocation fail." << std::endl;
     }
     init();
+
+    // Initialize the QLabel table
+    labelTable_ = (ClickableLabel **) malloc(DB_LENGTH * DB_LENGTH * sizeof(ClickableLabel *));
+    if(labelTable_) {
+        bool shift = true;
+        for(int i = 0 ; i < DB_LENGTH * DB_LENGTH ; ++i) {
+            labelTable_[i] = new ClickableLabel((position_t){i / 8, i % 8});
+            // Set the background color of the square.
+            if(i % 8 == 0) {
+                shift = !shift;
+            }
+            if((i % 2 == 0 && !shift) ||  ((i % 2 != 0 && shift))) {
+                // The square is black
+                labelTable_[i]->setStyleSheet("QLabel { background-color : black;}");
+            } else {
+                // The square is white
+                labelTable_[i]->setStyleSheet("QLabel { background-color : white;}");
+            }
+        }
+    } else {
+        std::cerr << "Memory allocation fail." << std::endl;
+    }
 }
 
 
@@ -44,24 +67,31 @@ color_t DraughtBoard::getColor(const position_t & inPos) const {
 }
 
 
-std::string * DraughtBoard::draw() const {
-    std::string *res = new std::string("");
-    for(int j = 0 ; j < DB_LENGTH ; ++j) {
-        for(int i = 0 ; i < DB_LENGTH ; ++i) {
-            if(gameboard_[i][j]) {
-                *res += gameboard_[i][j]->draw();
-            } else {
-                if(getColor((position_t){i,j}) == WHITE) {
-                    *res += "W";
-                } else {
-                    *res += "B";
-                }
-            }
-            *res += "\t";
+QWidget * DraughtBoard::draw() const {
+    QWidget * db = new QWidget;
+
+    // Create the layout for the draughtboard
+    QGridLayout * layout = new QGridLayout;
+
+    // Add QLabels to the layout
+    position_t p;
+    for(int i = 0 ; i < DB_LENGTH * DB_LENGTH ; ++i) {
+        p = (position_t){i / DB_LENGTH, i % DB_LENGTH};
+        if(!isFree(p)) {
+            labelTable_[i]->setPixmap(*getPiece(p)->draw());
+        } else {
+            labelTable_[i]->setPixmap(0);
         }
-        *res += "\n";
+        layout->addWidget(labelTable_[i], i % DB_LENGTH, i / DB_LENGTH);
     }
-    return res;
+
+    // Suppress margin and padding between sqares
+    layout->setMargin(0);
+    layout->setSpacing(0);
+
+    db->setLayout(layout);
+
+    return db;
 }
 
 
@@ -123,4 +153,9 @@ const Piece * DraughtBoard::getPiece(const position_t & inPosition) const {
         throw SquareEmpty("The square is empty.");
     }
     return gameboard_[inPosition.i][inPosition.j];
+}
+
+
+ClickableLabel ** DraughtBoard::getLabelTable() {
+    return labelTable_;
 }

@@ -14,6 +14,7 @@
 
 #include <vector>
 #include <string>
+#include <QPixmap>
 #include "rules.h"
 #include "piece.h"
 
@@ -62,7 +63,7 @@ public:
     /**
      * Draws the Piece
      */
-    virtual std::string draw() const;
+    virtual QPixmap * draw() const;
 
 
     /**

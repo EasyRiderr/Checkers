@@ -1,30 +1,32 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2013-12-26T21:33:42
+# Project created by QtCreator 2013-12-31T15:21:02
 #
 #-------------------------------------------------
 
 QT       += core gui
 
-TARGET = Checkers
+TARGET = CheckersGUI
 TEMPLATE = app
 
 
 SOURCES += \
+    main.cpp \
     controller.cpp \
     draughtboard.cpp \
     draughtpiece.cpp \
     piece.cpp \
-    main.cpp
+    clickablelabel.cpp
 
 HEADERS  += \
     controller.h \
     draughtboard.h \
     draughtpiece.h \
-    piece.h \
     factory.h \
+    piece.h \
     prototype.h \
-    rules.h
+    rules.h \
+    clickablelabel.h
 
 FORMS    +=
 

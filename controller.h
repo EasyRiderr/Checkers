@@ -13,6 +13,7 @@
 
 
 #include <map>
+#include <QtGui>
 #include "rules.h"
 #include "piece.h"
 #include "draughtBoard.h"
@@ -138,15 +139,19 @@ private:
 };
 
 
-class Controller
+class Controller : public QMainWindow
 {
+
+    Q_OBJECT
+
 
 public:
 
     /**
      * Default constructor of Controller.
+     * @param parent, The parent object of the window.
      */
-    Controller();
+    Controller(QWidget * parent);
 
 
     /**
@@ -171,7 +176,7 @@ public:
     /**
      * Displays the draughtboard.
      */
-    void display() const;
+    //void display();
 
 
     /**
@@ -207,12 +212,23 @@ private:
     std::map<int, Piece *> blackPieces_;
 
 
-    /** Permits to know who does play (white or black). */
+    /** Permits to know who does play (white or black piece). */
     color_t next_;
 
 
     /** The draughtboard. */
     DraughtBoard db_;
+
+
+    /** The squarre selected */
+    position_t squareSelected_;
+
+
+    /**
+     * Return true if a piece is even selected.
+     * @return True if a piece is even selected, false else.
+     */
+    bool isPieceSelected() const;
 
 
     /**
@@ -222,24 +238,37 @@ private:
 
 
     /**
-     * Verifies that the position are valid to move a Piece.
-     * @param inSrc, the source square of the Piece.
-     * @param inDst, the destination square of the Piece.
-     * @throw SquareEmpty if the source position does not contain a Piece.
-     * @throw std::out_of_range if a given position is out of range.
-     * @throw WrongPlayer if the source position contains a wrong color Piece.
-     * @throw SquareNotEmpty if the destination position is occuped by another Piece.
-     */
-    void verifyPositions(const position_t & inSrc, const position_t & inDst) const throw(SquareEmpty, std::out_of_range, WrongPlayer, SquareNotEmpty);
-
-
-    /**
      * Returns true if the position given in parameter is reachable the Piece.
      * @param inPiece, The Piece to test if it can reach the position given in parameter.
      * @param inPos, The position to reach.
      * @return True if the position given in parameter is reachable the Piece.
      */
     bool pieceCanReachPosition(const Piece & inPiece, const position_t & inPos) const;
+
+
+    /**
+     * Treat the GUI Event.
+     * Permits to control move on the draughtboard.
+     * @param pos, the position of the selected square.
+     * @throw SquareEmpty exception if the square is empty.
+     * @throw WrongPlayer if it is not the good player who try to move.
+     * @throw SquareNotEmpty exception if the square is not empty.
+     */
+    void treatGUIEvent(position_t pos) throw(SquareEmpty, WrongPlayer, SquareNotEmpty);
+
+
+
+
+private slots:
+
+    /**
+     * Permit to know which square of the draughtboard was selected by a click.
+     * @param pos, The position of the square in the draughtboard.
+     * @throw SquareEmpty if the source position does not contain a Piece.
+     * @throw WrongPlayer if the source position contains a wrong color Piece.
+     * @throw SquareNotEmpty if the destination position is occuped by another Piece.
+     */
+    void getClicked(position_t pos);
 
 
 };

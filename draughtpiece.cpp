@@ -8,6 +8,7 @@
  */
 
 
+#include <QPainter>
 #include "draughtpiece.h"
 
 
@@ -36,8 +37,31 @@ void DraughtPiece::setState(const state_t & inState) {
 }
 
 
-std::string DraughtPiece::draw() const {
-    return (isBlack()) ? (state_ == NORMAL)? "o" : "O" : (state_ == NORMAL)? "x" : "X";
+QPixmap * DraughtPiece::draw() const {
+    QPixmap * image = new QPixmap(75, 75);
+    QPainter painter(image);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    // Draw the background
+    painter.setBrush(QBrush(Qt::white, Qt::SolidPattern));
+    painter.drawRect(0, 0, 75, 75);
+    // Draw the Piece
+    painter.setBrush(QBrush((getColor() == WHITE) ? Qt::white : Qt::black, Qt::SolidPattern));
+    painter.drawEllipse(5, 5, 65, 65);
+    if(getState() == SUPER) {
+        // Update the color
+        QPen pen = painter.pen();
+        pen.setColor((getColor() == WHITE) ? Qt::black : Qt::white);
+        painter.setPen(pen);
+        // Write a S
+        QFont font = painter.font();
+        font.setBold(true);
+        font.setPointSize(24);
+        painter.setFont(font);
+        painter.drawText(30, 47, "S");
+    }
+    painter.end();
+
+    return image;
 }
 
 

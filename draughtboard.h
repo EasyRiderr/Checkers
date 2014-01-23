@@ -13,9 +13,11 @@
 
 #include <string>
 #include <sstream>
+#include <QtGui>
 #include <stdexcept>
 #include "rules.h"
 #include "piece.h"
+#include "clickablelabel.h"
 
 
 class SquareNotEmpty : public std::exception {
@@ -109,7 +111,7 @@ public:
     /**
      * Constructor of draughtboard.
      */
-    DraughtBoard();
+    DraughtBoard(/*QObject * parent = 0*/);
 
 
     /**
@@ -122,7 +124,7 @@ public:
     /**
      * Draws the draughtpiece.
      */
-    std::string * draw() const;
+    QWidget * draw() const;
 
 
     /**
@@ -167,9 +169,17 @@ public:
      * Returns the Piece contained in the square to the given position.
      * @param inPosition, the position of the Piece on the draughtboard.
      * @return The piece wished.
-     * @throw SquareEmpty if there is no Piece on the position.
      */
     const Piece * getPiece(const position_t & inPosition) const;
+
+
+
+
+    /**
+     * Return the table of clickable labels.
+     * @return The table of clickable labels.
+     */
+    ClickableLabel ** getLabelTable();
 
 
 
@@ -186,6 +196,12 @@ private:
      * Initialyzes all sqares of the draughtboard to NULL.
      */
     void init();
+
+
+    /**
+     * ClickableLabel table.
+     */
+    ClickableLabel ** labelTable_;
 
 };
 
